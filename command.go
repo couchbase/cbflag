@@ -101,7 +101,7 @@ func (c *Command) parseFlags(args []string) {
 		flag.markFound(args[i])
 
 		if !flag.isFlag {
-			if (i + 1) > len(args) {
+			if (i + 1) >= len(args) {
 				fmt.Fprintf(c.cml.out, "Expected argument for flag: %s\n\n", args[i])
 				c.usage()
 				return
