@@ -1,8 +1,13 @@
 package cbflag
 
 import (
+	"fmt"
 	"os"
 )
+
+type Context struct {
+	cli *CommandLine
+}
 
 type CommandLine struct {
 	args    []string
@@ -20,7 +25,7 @@ func NewCommandLine(progName, progUsage string, args []string) *CommandLine {
 		manpath: "",
 		out:     os.Stdout,
 	}
-	rv.cmd.cml = rv
+
 	return rv
 }
 
@@ -38,7 +43,8 @@ func (c *CommandLine) SetManPath(path string) {
 
 func (c *CommandLine) Parse() {
 	c.parsed = true
-	c.cmd.parse(c.args)
+	context := &Context{c}
+	c.cmd.parse(context, c.args)
 }
 
 func (c *CommandLine) Parsed() bool {
@@ -46,5 +52,5 @@ func (c *CommandLine) Parsed() bool {
 }
 
 func (c *CommandLine) Usage() {
-	c.cmd.usage()
+	fmt.Fprint(c.out, c.cmd.usage())
 }
