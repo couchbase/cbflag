@@ -5,8 +5,13 @@ import (
 	"strings"
 )
 
-const OVERHEAD_LEN = 10
-const FLAGS_LEN int = 20
+// |                                 TOTAL_LEN (80)                                 |
+// | PREFIX_LEN (2) |       FLAGS_LEN (25)       | POSTFIX_LEN (3) | USAGE_LEN (50) |
+// | PREFIX_LEN (2) | flags definition | padding | POSTFIX_LEN (3) | USAGE_LEN (50) |
+
+const PREFIX_LEN = 2
+const POSTFIX_LEN = 3
+const FLAGS_LEN int = 25
 const USAGE_LEN int = 50
 const TOTAL_LEN int = 80
 
@@ -119,12 +124,15 @@ func (f *Flag) usageString() string {
 	s := ""
 	lines := f.splitDescription()
 
+	flagsStr := f.flagsHelpString()
 	if len(f.long) > FLAGS_LEN {
-		s += fmt.Sprintf("  -%s,--%s\n", f.short, f.long)
+		prePadding := strings.Repeat(" ", PREFIX_LEN)
+		s += fmt.Sprintf("%s%s\n", prePadding, flagsStr)
 		s += fmt.Sprintf("%s%s\n", strings.Repeat(" ", TOTAL_LEN-USAGE_LEN), lines[0])
 	} else {
-		spaces := strings.Repeat(" ", TOTAL_LEN-USAGE_LEN-OVERHEAD_LEN-len(f.long))
-		s += fmt.Sprintf("  -%s,--%s%s   %s\n", f.short, f.long, spaces, lines[0])
+		prePadding := strings.Repeat(" ", PREFIX_LEN)
+		postPadding := strings.Repeat(" ", FLAGS_LEN+POSTFIX_LEN-len(flagsStr))
+		s += fmt.Sprintf("%s%s%s%s\n", prePadding, flagsStr, postPadding, lines[0])
 	}
 
 	for i := 1; i < len(lines); i++ {
@@ -132,6 +140,18 @@ func (f *Flag) usageString() string {
 	}
 
 	return s
+}
+
+func (f *Flag) flagsHelpString() string {
+	if f.short != "" && f.long != "" {
+		return fmt.Sprintf("-%s,--%s", f.short, f.long)
+	} else if f.short == "" {
+		return fmt.Sprintf("   --%s", f.long)
+	} else if f.long == "" {
+		return fmt.Sprintf("-%s", f.short, f.long)
+	} else {
+		return ""
+	}
 }
 
 func (f *Flag) splitDescription() []string {
