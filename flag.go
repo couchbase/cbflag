@@ -73,12 +73,12 @@ func PasswordFlag(result *string, def string, required bool) *Flag {
 }
 
 func CACertFlag(result *string, def string, required bool) *Flag {
-	return varFlag(newStringValue(def, result), "p", "cacert",
+	return varFlag(newStringValue(def, result), "", "cacert",
 		"Verifies the cluster identity with this certificate", nil, required, false)
 }
 
 func NoSSLVerifyFlag(result *bool, required bool) *Flag {
-	return varFlag(newBoolValue(false, result), "n", "no-ssl-verify",
+	return varFlag(newBoolValue(false, result), "", "no-ssl-verify",
 		"Skips SSL verification of certificates against CA", nil, required, true)
 }
 
