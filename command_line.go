@@ -10,41 +10,60 @@ type Context struct {
 }
 
 type CommandLine struct {
-	cmd     *Command
-	manpath string
-	out     *os.File
+	Name     string
+	Desc     string
+	ManPath  string
+	ManName  string
+	Commands []*Command
+	Flags    []*Flag
+	manpath  string
+	out      *os.File
 }
 
 func NewCommandLine(progName, progUsage string) *CommandLine {
-	rv := &CommandLine{
-		cmd:     NewCommand(progName, progUsage, nil),
-		manpath: "",
-		out:     os.Stdout,
+	return &CommandLine{
+		Name:     progName,
+		Desc:     progUsage,
+		ManPath:  "",
+		ManName:  "",
+		Commands: make([]*Command, 0),
+		Flags:    make([]*Flag, 0),
+		out:      os.Stdout,
 	}
-
-	return rv
 }
 
 func (c *CommandLine) AddCommand(cmd *Command) {
-	c.cmd.AddCommand(cmd)
+	c.Commands = append(c.Commands, cmd)
 }
 
 func (c *CommandLine) AddFlag(flag *Flag) {
-	c.cmd.AddFlag(flag)
-}
-
-func (c *CommandLine) SetManPath(path string) {
-	c.manpath = path
+	c.Flags = append(c.Flags, flag)
 }
 
 func (c *CommandLine) Parse(args []string) {
+	cmd := &Command{
+		Name:     c.Name,
+		Desc:     c.Desc,
+		Run:      nil,
+		Commands: c.Commands,
+		Flags:    c.Flags,
+	}
+
 	context := &Context{
 		cli:      c,
 		prevCmds: make([]string, 0),
 	}
-	c.cmd.parse(context, args[1:])
+	cmd.parse(context, args[1:])
 }
 
 func (c *CommandLine) Usage() string {
-	return c.cmd.Usage()
+	cmd := &Command{
+		Name:     c.Name,
+		Desc:     c.Desc,
+		Run:      nil,
+		Commands: c.Commands,
+		Flags:    c.Flags,
+	}
+
+	return cmd.Usage()
 }

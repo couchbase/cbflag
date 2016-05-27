@@ -14,8 +14,8 @@ type Command struct {
 	Desc     string
 	Run      func()
 	help     bool
-	commands []*Command
-	flags    []*Flag
+	Commands []*Command
+	Flags    []*Flag
 }
 
 func NewCommand(name, usage string, cb func()) *Command {
@@ -23,8 +23,8 @@ func NewCommand(name, usage string, cb func()) *Command {
 		Name:     name,
 		Desc:     usage,
 		Run:      cb,
-		commands: make([]*Command, 0),
-		flags:    make([]*Flag, 0),
+		Commands: make([]*Command, 0),
+		Flags:    make([]*Flag, 0),
 	}
 
 	rv.AddFlag(helpFlag(&rv.help))
@@ -32,11 +32,11 @@ func NewCommand(name, usage string, cb func()) *Command {
 }
 
 func (c *Command) AddCommand(cmd *Command) {
-	c.commands = append(c.commands, cmd)
+	c.Commands = append(c.Commands, cmd)
 }
 
 func (c *Command) AddFlag(flag *Flag) {
-	c.flags = append(c.flags, flag)
+	c.Flags = append(c.Flags, flag)
 }
 
 func (c *Command) parse(ctx *Context, args []string) {
@@ -59,7 +59,7 @@ func (c *Command) parseCommands(ctx *Context, args []string) {
 		return
 	}
 
-	for _, cmd := range c.commands {
+	for _, cmd := range c.Commands {
 		if cmd.Name == args[0] {
 			cmd.parse(ctx, args[1:])
 			return
@@ -135,7 +135,7 @@ func (c *Command) parseFlags(ctx *Context, args []string) {
 
 	// Check that all required flags have been specified
 	allRequired := true
-	for _, flag := range c.flags {
+	for _, flag := range c.Flags {
 		if flag.required && !flag.found() {
 			fmt.Fprintf(ctx.cli.out, "Flag required, but not specified: -%s/--%s\n", flag.short, flag.long)
 			allRequired = false
@@ -158,7 +158,7 @@ func (c *Command) findFlagByName(f string) *Flag {
 		f = f[1:]
 	}
 
-	for _, flag := range c.flags {
+	for _, flag := range c.Flags {
 		if flag.short == f || flag.long == f {
 			return flag
 		}
@@ -205,13 +205,13 @@ func (c *Command) Usage() string {
 	s := ""
 	if c.hasCommands() {
 		maxLen := 0
-		for _, cmd := range c.commands {
+		for _, cmd := range c.Commands {
 			if len(cmd.Name) > maxLen {
 				maxLen = len(cmd.Name)
 			}
 		}
 
-		for _, cmd := range c.commands {
+		for _, cmd := range c.Commands {
 			spaces := strings.Repeat(" ", maxLen-len(cmd.Name))
 			s += fmt.Sprintf("  %s%s   %s\n", cmd.Name, spaces, cmd.Desc)
 		}
@@ -220,7 +220,7 @@ func (c *Command) Usage() string {
 
 	if c.hasRequiredFlags() {
 		s += "Required Flags:\n\n"
-		for _, flag := range c.flags {
+		for _, flag := range c.Flags {
 			if flag.required {
 				s += flag.usageString()
 			}
@@ -230,7 +230,7 @@ func (c *Command) Usage() string {
 
 	if c.hasOptionalFlags() {
 		s += "Optional Flags:\n\n"
-		for _, flag := range c.flags {
+		for _, flag := range c.Flags {
 			if !flag.required {
 				s += flag.usageString()
 			}
@@ -242,15 +242,15 @@ func (c *Command) Usage() string {
 }
 
 func (c *Command) hasCommands() bool {
-	return len(c.commands) > 0
+	return len(c.Commands) > 0
 }
 
 func (c *Command) hasFlags() bool {
-	return len(c.flags) > 0
+	return len(c.Flags) > 0
 }
 
 func (c *Command) hasOptionalFlags() bool {
-	for _, flag := range c.flags {
+	for _, flag := range c.Flags {
 		if !flag.required {
 			return true
 		}
@@ -260,7 +260,7 @@ func (c *Command) hasOptionalFlags() bool {
 }
 
 func (c *Command) hasRequiredFlags() bool {
-	for _, flag := range c.flags {
+	for _, flag := range c.Flags {
 		if flag.required {
 			return true
 		}
