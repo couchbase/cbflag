@@ -1,7 +1,6 @@
 package cbflag
 
 import (
-	"fmt"
 	"os"
 )
 
@@ -42,6 +41,6 @@ func (c *CommandLine) Parse(args []string) {
 	c.cmd.parse(context, args)
 }
 
-func (c *CommandLine) Usage() {
-	fmt.Fprint(c.out, c.cmd.usage())
+func (c *CommandLine) Usage() string {
+	return c.cmd.usage()
 }
