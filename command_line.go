@@ -5,7 +5,8 @@ import (
 )
 
 type Context struct {
-	cli *CommandLine
+	cli      *CommandLine
+	prevCmds []string
 }
 
 type CommandLine struct {
@@ -37,10 +38,13 @@ func (c *CommandLine) SetManPath(path string) {
 }
 
 func (c *CommandLine) Parse(args []string) {
-	context := &Context{c}
-	c.cmd.parse(context, args)
+	context := &Context{
+		cli:      c,
+		prevCmds: make([]string, 0),
+	}
+	c.cmd.parse(context, args[1:])
 }
 
 func (c *CommandLine) Usage() string {
-	return c.cmd.usage()
+	return c.cmd.Usage()
 }
