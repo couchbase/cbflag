@@ -10,15 +10,13 @@ type Context struct {
 }
 
 type CommandLine struct {
-	args    []string
 	cmd     *Command
 	manpath string
 	out     *os.File
 }
 
-func NewCommandLine(progName, progUsage string, args []string) *CommandLine {
+func NewCommandLine(progName, progUsage string) *CommandLine {
 	rv := &CommandLine{
-		args:    args[1:],
 		cmd:     NewCommand(progName, progUsage, nil),
 		manpath: "",
 		out:     os.Stdout,
@@ -39,9 +37,9 @@ func (c *CommandLine) SetManPath(path string) {
 	c.manpath = path
 }
 
-func (c *CommandLine) Parse() {
+func (c *CommandLine) Parse(args []string) {
 	context := &Context{c}
-	c.cmd.parse(context, c.args)
+	c.cmd.parse(context, args)
 }
 
 func (c *CommandLine) Usage() {
