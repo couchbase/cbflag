@@ -5,11 +5,11 @@ import (
 )
 
 type Context struct {
-	cli      *CommandLine
+	cli      *CLI
 	prevCmds []string
 }
 
-type CommandLine struct {
+type CLI struct {
 	Name     string
 	Desc     string
 	ManPath  string
@@ -20,8 +20,8 @@ type CommandLine struct {
 	Writer   *os.File
 }
 
-func NewCommandLine(progName, progUsage string) *CommandLine {
-	return &CommandLine{
+func NewCLI(progName, progUsage string) *CLI {
+	return &CLI{
 		Name:     progName,
 		Desc:     progUsage,
 		ManPath:  "",
@@ -32,15 +32,15 @@ func NewCommandLine(progName, progUsage string) *CommandLine {
 	}
 }
 
-func (c *CommandLine) AddCommand(cmd *Command) {
+func (c *CLI) AddCommand(cmd *Command) {
 	c.Commands = append(c.Commands, cmd)
 }
 
-func (c *CommandLine) AddFlag(flag *Flag) {
+func (c *CLI) AddFlag(flag *Flag) {
 	c.Flags = append(c.Flags, flag)
 }
 
-func (c *CommandLine) Parse(args []string) {
+func (c *CLI) Parse(args []string) {
 	cmd := &Command{
 		Name:     c.Name,
 		Desc:     c.Desc,
@@ -56,7 +56,7 @@ func (c *CommandLine) Parse(args []string) {
 	cmd.parse(context, args[1:])
 }
 
-func (c *CommandLine) Usage() string {
+func (c *CLI) Usage() string {
 	cmd := &Command{
 		Name:     c.Name,
 		Desc:     c.Desc,
