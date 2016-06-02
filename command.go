@@ -42,7 +42,7 @@ func (c *Command) AddFlag(flag *Flag) {
 func (c *Command) parse(ctx *Context, args []string) {
 	ctx.prevCmds = append(ctx.prevCmds, c.Name)
 	if len(args) == 0 {
-		fmt.Fprint(ctx.cli.out, c.usageTitle(ctx)+c.Usage())
+		fmt.Fprint(ctx.cli.Writer, c.usageTitle(ctx)+c.Usage())
 		return
 	}
 
@@ -55,7 +55,7 @@ func (c *Command) parse(ctx *Context, args []string) {
 
 func (c *Command) parseCommands(ctx *Context, args []string) {
 	if len(args) == 0 {
-		fmt.Fprint(ctx.cli.out, c.usageTitle(ctx)+c.Usage())
+		fmt.Fprint(ctx.cli.Writer, c.usageTitle(ctx)+c.Usage())
 		return
 	}
 
@@ -65,33 +65,33 @@ func (c *Command) parseCommands(ctx *Context, args []string) {
 			return
 		}
 	}
-	fmt.Fprintf(ctx.cli.out, "Invalid subcommand `%s`\n\n", args[0])
-	fmt.Fprint(ctx.cli.out, c.usageTitle(ctx)+c.Usage())
+	fmt.Fprintf(ctx.cli.Writer, "Invalid subcommand `%s`\n\n", args[0])
+	fmt.Fprint(ctx.cli.Writer, c.usageTitle(ctx)+c.Usage())
 }
 
 func (c *Command) parseFlags(ctx *Context, args []string) {
 	if len(args) == 0 {
-		fmt.Fprint(ctx.cli.out, c.usageTitle(ctx)+c.Usage())
+		fmt.Fprint(ctx.cli.Writer, c.usageTitle(ctx)+c.Usage())
 		return
 	}
 
 	for i := 0; i < len(args); i++ {
 		if !(strings.HasPrefix(args[i], "-") || strings.HasPrefix(args[i], "--")) {
-			fmt.Fprintf(ctx.cli.out, "Expected flag: %s\n\n", args[i])
-			fmt.Fprint(ctx.cli.out, c.usageTitle(ctx)+c.Usage())
+			fmt.Fprintf(ctx.cli.Writer, "Expected flag: %s\n\n", args[i])
+			fmt.Fprint(ctx.cli.Writer, c.usageTitle(ctx)+c.Usage())
 			return
 		}
 
 		flag := c.findFlagByName(args[i])
 		if flag == nil {
-			fmt.Fprintf(ctx.cli.out, "Unknown flag: %s\n\n", args[i])
-			fmt.Fprint(ctx.cli.out, c.usageTitle(ctx)+c.Usage())
+			fmt.Fprintf(ctx.cli.Writer, "Unknown flag: %s\n\n", args[i])
+			fmt.Fprint(ctx.cli.Writer, c.usageTitle(ctx)+c.Usage())
 			return
 		}
 
 		if flag.found() {
-			fmt.Fprintf(ctx.cli.out, "Argument for -%/--% already specified\n\n", flag.short, flag.long)
-			fmt.Fprint(ctx.cli.out, c.usageTitle(ctx)+c.Usage())
+			fmt.Fprintf(ctx.cli.Writer, "Argument for -%/--% already specified\n\n", flag.short, flag.long)
+			fmt.Fprint(ctx.cli.Writer, c.usageTitle(ctx)+c.Usage())
 			return
 		}
 
@@ -99,15 +99,15 @@ func (c *Command) parseFlags(ctx *Context, args []string) {
 
 		if !flag.isFlag {
 			if (i + 1) >= len(args) {
-				fmt.Fprintf(ctx.cli.out, "Expected argument for flag: %s\n\n", args[i])
-				fmt.Fprint(ctx.cli.out, c.usageTitle(ctx)+c.Usage())
+				fmt.Fprintf(ctx.cli.Writer, "Expected argument for flag: %s\n\n", args[i])
+				fmt.Fprint(ctx.cli.Writer, c.usageTitle(ctx)+c.Usage())
 				return
 			}
 
 			i++
 			if err := flag.value.Set(args[i]); err != nil {
-				fmt.Fprintf(ctx.cli.out, "Unable to process value for flag: %s\n\n", args[i])
-				fmt.Fprint(ctx.cli.out, c.usageTitle(ctx)+c.Usage())
+				fmt.Fprintf(ctx.cli.Writer, "Unable to process value for flag: %s\n\n", args[i])
+				fmt.Fprint(ctx.cli.Writer, c.usageTitle(ctx)+c.Usage())
 				return
 			}
 		} else {
@@ -115,8 +115,8 @@ func (c *Command) parseFlags(ctx *Context, args []string) {
 		}
 
 		if err := flag.validate(); err != nil {
-			fmt.Fprintf(ctx.cli.out, "%s\n\n", err.Error())
-			fmt.Fprint(ctx.cli.out, c.usageTitle(ctx)+c.Usage())
+			fmt.Fprintf(ctx.cli.Writer, "%s\n\n", err.Error())
+			fmt.Fprint(ctx.cli.Writer, c.usageTitle(ctx)+c.Usage())
 			return
 		}
 
@@ -128,7 +128,7 @@ func (c *Command) parseFlags(ctx *Context, args []string) {
 		if flag.foundLong {
 			c.showManual(c.Name, "default", ctx)
 		} else {
-			fmt.Fprint(ctx.cli.out, c.usageTitle(ctx)+c.Usage())
+			fmt.Fprint(ctx.cli.Writer, c.usageTitle(ctx)+c.Usage())
 		}
 		return
 	}
@@ -137,14 +137,14 @@ func (c *Command) parseFlags(ctx *Context, args []string) {
 	allRequired := true
 	for _, flag := range c.Flags {
 		if flag.required && !flag.found() {
-			fmt.Fprintf(ctx.cli.out, "Flag required, but not specified: -%s/--%s\n", flag.short, flag.long)
+			fmt.Fprintf(ctx.cli.Writer, "Flag required, but not specified: -%s/--%s\n", flag.short, flag.long)
 			allRequired = false
 		}
 	}
 
 	if !allRequired {
-		fmt.Fprintf(ctx.cli.out, "\n")
-		fmt.Fprint(ctx.cli.out, c.usageTitle(ctx)+c.Usage())
+		fmt.Fprintf(ctx.cli.Writer, "\n")
+		fmt.Fprint(ctx.cli.Writer, c.usageTitle(ctx)+c.Usage())
 		return
 	}
 
@@ -170,7 +170,7 @@ func (c *Command) findFlagByName(f string) *Flag {
 func (c *Command) showManual(page, installType string, ctx *Context) {
 	abspath, err := filepath.Abs(os.Args[0])
 	if err != nil {
-		fmt.Fprintf(ctx.cli.out, "Unable to get path to man files due to `%s`\n", err.Error())
+		fmt.Fprintf(ctx.cli.Writer, "Unable to get path to man files due to `%s`\n", err.Error())
 		return
 	}
 

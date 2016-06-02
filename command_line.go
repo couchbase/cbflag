@@ -17,7 +17,7 @@ type CommandLine struct {
 	Commands []*Command
 	Flags    []*Flag
 	manpath  string
-	out      *os.File
+	Writer   *os.File
 }
 
 func NewCommandLine(progName, progUsage string) *CommandLine {
@@ -28,7 +28,7 @@ func NewCommandLine(progName, progUsage string) *CommandLine {
 		ManName:  "",
 		Commands: make([]*Command, 0),
 		Flags:    make([]*Flag, 0),
-		out:      os.Stdout,
+		Writer:   os.Stdout,
 	}
 }
 
