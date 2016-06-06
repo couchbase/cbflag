@@ -98,17 +98,27 @@ func (c *Command) parseFlags(ctx *Context, args []string) {
 		flag.markFound(args[i])
 
 		if !flag.isFlag {
-			if (i + 1) >= len(args) {
-				fmt.Fprintf(ctx.cli.Writer, "Expected argument for flag: %s\n\n", args[i])
+			opt := args[i]
+			value := ""
+			if (i + 1) < len(args) {
+				value = args[i+1]
+			}
+
+			value, hadOption, err := flag.optHandler(opt, value)
+			if err != nil {
+				fmt.Fprintf(ctx.cli.Writer, err.Error())
+				fmt.Fprint(ctx.cli.Writer, "\n\n"+c.usageTitle(ctx)+c.Usage())
+				return
+			}
+
+			if err := flag.value.Set(value); err != nil {
+				fmt.Fprintf(ctx.cli.Writer, "Unable to process value for flag: %s\n\n", args[i])
 				fmt.Fprint(ctx.cli.Writer, c.usageTitle(ctx)+c.Usage())
 				return
 			}
 
-			i++
-			if err := flag.value.Set(args[i]); err != nil {
-				fmt.Fprintf(ctx.cli.Writer, "Unable to process value for flag: %s\n\n", args[i])
-				fmt.Fprint(ctx.cli.Writer, c.usageTitle(ctx)+c.Usage())
-				return
+			if hadOption {
+				i++
 			}
 		} else {
 			flag.value.Set("true")

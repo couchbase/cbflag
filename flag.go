@@ -3,6 +3,8 @@ package cbflag
 import (
 	"fmt"
 	"strings"
+
+	"github.com/couchbase/cbflag/pwd"
 )
 
 // |                                 TOTAL_LEN (80)                                 |
@@ -16,6 +18,7 @@ const USAGE_LEN int = 50
 const TOTAL_LEN int = 80
 
 type ValidatorFn func(Value) error
+type OptionHandler func(string, string) (string, bool, error)
 
 type Flag struct {
 	short      string
@@ -23,6 +26,7 @@ type Flag struct {
 	desc       string
 	value      Value
 	validator  ValidatorFn
+	optHandler OptionHandler
 	foundLong  bool
 	foundShort bool
 	required   bool
@@ -30,69 +34,75 @@ type Flag struct {
 }
 
 func BoolFlag(result *bool, def bool, short, long, usage string) *Flag {
-	return varFlag(newBoolValue(def, result), short, long, usage, nil, false, true)
+	return varFlag(newBoolValue(def, result), short, long, usage, nil, DefaultOptionHandler, false, true)
 }
 
 func Float64Flag(result *float64, def float64, short, long, usage string, validator ValidatorFn, required bool) *Flag {
-	return varFlag(newFloat64Value(def, result), short, long, usage, validator, required, false)
+	return varFlag(newFloat64Value(def, result), short, long, usage, validator, DefaultOptionHandler, required, false)
 }
 
 func IntFlag(result *int, def int, short, long, usage string, validator ValidatorFn, required bool) *Flag {
-	return varFlag(newIntValue(def, result), short, long, usage, validator, required, false)
+	return varFlag(newIntValue(def, result), short, long, usage, validator, DefaultOptionHandler, required, false)
 }
 
 func Int64Flag(result *int64, def int64, short, long, usage string, validator ValidatorFn, required bool) *Flag {
-	return varFlag(newInt64Value(def, result), short, long, usage, validator, required, false)
+	return varFlag(newInt64Value(def, result), short, long, usage, validator, DefaultOptionHandler, required, false)
 }
 
 func StringFlag(result *string, def, short, long, usage string, validator ValidatorFn, required bool) *Flag {
-	return varFlag(newStringValue(def, result), short, long, usage, validator, required, false)
+	return varFlag(newStringValue(def, result), short, long, usage, validator, DefaultOptionHandler,
+		required, false)
 }
 
 func UintFlag(result *uint, def uint, short, long, usage string, validator ValidatorFn, required bool) *Flag {
-	return varFlag(newUintValue(def, result), short, long, usage, validator, required, false)
+	return varFlag(newUintValue(def, result), short, long, usage, validator, DefaultOptionHandler,
+		required, false)
 }
 
 func Uint64Flag(result *uint64, def uint64, short, long, usage string, validator ValidatorFn, required bool) *Flag {
-	return varFlag(newUint64Value(def, result), short, long, usage, validator, required, false)
+	return varFlag(newUint64Value(def, result), short, long, usage, validator, DefaultOptionHandler,
+		required, false)
 }
 
 func HostFlag(result *string, def string, required bool) *Flag {
 	return varFlag(newStringValue(def, result), "c", "cluster", "The hostname of the Couchbase cluster",
-		hostValidator, required, false)
+		hostValidator, DefaultOptionHandler, required, false)
 }
 
 func UsernameFlag(result *string, def string, required bool) *Flag {
 	return varFlag(newStringValue(def, result), "u", "username", "The hostname of the Couchbase cluster",
-		nil, required, false)
+		nil, DefaultOptionHandler, required, false)
 }
 
 func PasswordFlag(result *string, def string, required bool) *Flag {
 	return varFlag(newStringValue(def, result), "p", "password", "The password of the Couchbase cluster",
-		nil, required, false)
+		nil, PasswordOptionHandler, required, false)
 }
 
 func CACertFlag(result *string, def string, required bool) *Flag {
 	return varFlag(newStringValue(def, result), "", "cacert",
-		"Verifies the cluster identity with this certificate", nil, required, false)
+		"Verifies the cluster identity with this certificate", nil, DefaultOptionHandler, required, false)
 }
 
 func NoSSLVerifyFlag(result *bool, required bool) *Flag {
 	return varFlag(newBoolValue(false, result), "", "no-ssl-verify",
-		"Skips SSL verification of certificates against CA", nil, required, true)
+		"Skips SSL verification of certificates against CA", nil, DefaultOptionHandler, required, true)
 }
 
 func helpFlag(result *bool) *Flag {
-	return varFlag(newBoolValue(false, result), "h", "help", "Prints the help message", nil, false, true)
+	return varFlag(newBoolValue(false, result), "h", "help", "Prints the help message", nil,
+		DefaultOptionHandler, false, true)
 }
 
-func varFlag(value Value, short, long, usage string, validator ValidatorFn, required, isFlag bool) *Flag {
+func varFlag(value Value, short, long, usage string, validator ValidatorFn, optHandler OptionHandler,
+	required, isFlag bool) *Flag {
 	return &Flag{
 		short:      short,
 		long:       long,
 		desc:       usage,
 		value:      value,
 		validator:  validator,
+		optHandler: optHandler,
 		foundLong:  false,
 		foundShort: false,
 		required:   required,
@@ -169,4 +179,22 @@ func (f *Flag) splitDescription() []string {
 	}
 
 	return append(lines, desc)
+}
+
+func DefaultOptionHandler(opt, value string) (string, bool, error) {
+	if value == "" || strings.HasPrefix(value, "-") {
+		return value, false, fmt.Errorf("Expected argument for option: %s", opt)
+	}
+
+	return value, true, nil
+}
+
+func PasswordOptionHandler(opt, value string) (string, bool, error) {
+	if value == "" || strings.HasPrefix(value, "-") {
+		fmt.Print("Password: ")
+		password, err := pwd.GetPasswd()
+		return string(password), false, err
+	}
+
+	return value, true, nil
 }
