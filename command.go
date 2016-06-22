@@ -10,12 +10,13 @@ import (
 )
 
 type Command struct {
-	Name     string
-	Desc     string
-	Run      func()
-	help     bool
-	Commands []*Command
-	Flags    []*Flag
+	Name        string
+	Desc        string
+	Run         func()
+	help        bool
+	initialized bool
+	Commands    []*Command
+	Flags       []*Flag
 }
 
 func NewCommand(name, usage string, cb func()) *Command {
@@ -39,7 +40,18 @@ func (c *Command) AddFlag(flag *Flag) {
 	c.Flags = append(c.Flags, flag)
 }
 
+func (c *Command) initialize() {
+	if c.initialized {
+		return
+	}
+
+	c.initialized = true
+	c.AddFlag(helpFlag(&c.help))
+}
+
 func (c *Command) parse(ctx *Context, args []string) {
+	c.initialize()
+
 	ctx.prevCmds = append(ctx.prevCmds, c.Name)
 	if len(args) == 0 {
 		fmt.Fprint(ctx.cli.Writer, c.usageTitle(ctx)+c.Usage())
