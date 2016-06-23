@@ -28,7 +28,6 @@ func NewCommand(name, usage string, cb func()) *Command {
 		Flags:    make([]*Flag, 0),
 	}
 
-	rv.AddFlag(helpFlag(&rv.help))
 	return rv
 }
 
@@ -47,6 +46,22 @@ func (c *Command) initialize() {
 
 	c.initialized = true
 	c.AddFlag(helpFlag(&c.help))
+
+	for curIdx, curFlag := range c.Flags {
+		for cmpIdx, cmpFlag := range c.Flags {
+			if curIdx == cmpIdx {
+				continue
+			}
+
+			if curFlag.short != "" && curFlag.short == cmpFlag.short {
+				panic(fmt.Sprintf("Found multiple flags defined for `%s`", curFlag.short))
+			}
+
+			if curFlag.long != "" && curFlag.long == cmpFlag.long {
+				panic(fmt.Sprintf("Found multiple flags defined for `%s`", curFlag.long))
+			}
+		}
+	}
 }
 
 func (c *Command) parse(ctx *Context, args []string) {
