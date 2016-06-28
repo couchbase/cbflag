@@ -3,15 +3,17 @@ package cbflag
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
-	"github.com/couchbase/backup/man"
+	"github.com/couchbase/cbflag/man"
 )
 
 type Command struct {
 	Name        string
 	Desc        string
+	ManPage     string
 	Run         func()
 	help        bool
 	initialized bool
@@ -19,10 +21,11 @@ type Command struct {
 	Flags       []*Flag
 }
 
-func NewCommand(name, usage string, cb func()) *Command {
+func NewCommand(name, usage, manPage string, cb func()) *Command {
 	rv := &Command{
 		Name:     name,
 		Desc:     usage,
+		ManPage:  manPage,
 		Run:      cb,
 		Commands: make([]*Command, 0),
 		Flags:    make([]*Flag, 0),
@@ -162,8 +165,8 @@ func (c *Command) parseFlags(ctx *Context, args []string) {
 	// Check to see if the help flag was specified
 	if c.help {
 		flag := c.findFlagByName("-h")
-		if flag.foundLong {
-			c.showManual(c.Name, "default", ctx)
+		if flag.foundLong && c.ManPage != "" {
+			c.showManual(ctx)
 		} else {
 			fmt.Fprint(ctx.cli.Writer, c.usageTitle(ctx)+c.Usage())
 		}
@@ -204,21 +207,12 @@ func (c *Command) findFlagByName(f string) *Flag {
 	return nil
 }
 
-func (c *Command) showManual(page, installType string, ctx *Context) {
-	abspath, err := filepath.Abs(os.Args[0])
-	if err != nil {
-		fmt.Fprintf(ctx.cli.Writer, "Unable to get path to man files due to `%s`\n", err.Error())
-		return
-	}
+func (c *Command) showManual(ctx *Context) {
+	mcmd := exec.Command("man", filepath.Join(ctx.cli.ManPath, c.ManPage))
+	mcmd.Stdout = os.Stdout
 
-	exedir := filepath.Dir(abspath)
-	loc := man.CouchbaseInstallPath(exedir)
-	if installType == "default" {
-		loc = man.StandaloneInstallPath(exedir)
-	}
-
-	if err := man.ShowManual(loc, page); err != nil {
-		fmt.Printf("%s\n", err.Error())
+	if err := man.ShowManual(ctx.cli.ManPath, c.ManPage); err != nil {
+		fmt.Fprint(ctx.cli.Writer, err.Error() + "\n")
 		return
 	}
 }
