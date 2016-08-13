@@ -120,7 +120,7 @@ func (c *Command) parseFlags(ctx *Context, args []string) {
 		}
 
 		if flag.found() {
-			fmt.Fprintf(ctx.cli.Writer, "Argument for -%/--% already specified\n\n", flag.short, flag.long)
+			fmt.Fprintf(ctx.cli.Writer, "Argument for -%s/--%s already specified\n\n", flag.short, flag.long)
 			fmt.Fprint(ctx.cli.Writer, c.usageTitle(ctx)+c.Usage())
 			return
 		}
