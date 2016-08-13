@@ -158,7 +158,7 @@ func (f *Flag) flagsHelpString() string {
 	} else if f.short == "" {
 		return fmt.Sprintf("   --%s", f.long)
 	} else if f.long == "" {
-		return fmt.Sprintf("-%s", f.short, f.long)
+		return fmt.Sprintf("-%s", f.short)
 	} else {
 		return ""
 	}
