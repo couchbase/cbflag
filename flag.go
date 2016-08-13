@@ -66,7 +66,7 @@ func Uint64Flag(result *uint64, def uint64, short, long, usage string, validator
 
 func HostFlag(result *string, def string, required bool) *Flag {
 	return varFlag(newStringValue(def, result), "c", "cluster", "The hostname of the Couchbase cluster",
-		hostValidator, DefaultOptionHandler, required, false)
+		HostValidator, DefaultOptionHandler, required, false)
 }
 
 func UsernameFlag(result *string, def string, required bool) *Flag {

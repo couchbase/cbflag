@@ -16,7 +16,7 @@ func (e HostNameError) Error() string {
 		" patterns:\n\n* <addr>:<port>\n* http://<addr>:<port>\n* couchbase://<addr>", e.msg)
 }
 
-func hostValidator(value Value) error {
+func HostValidator(value Value) error {
 	// Valid hostname should be in the form:
 	// <addr>:<port>
 	// http://<addr>:<port>
