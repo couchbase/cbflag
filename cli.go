@@ -14,6 +14,7 @@ type CLI struct {
 	Desc     string
 	ManPath  string
 	ManPage  string
+	Run      func()
 	Commands []*Command
 	Flags    []*Flag
 	manpath  string
@@ -26,6 +27,7 @@ func NewCLI(progName, progUsage string) *CLI {
 		Desc:     progUsage,
 		ManPath:  "",
 		ManPage:  "",
+		Run:      nil,
 		Commands: make([]*Command, 0),
 		Flags:    make([]*Flag, 0),
 		Writer:   os.Stdout,
@@ -44,7 +46,7 @@ func (c *CLI) Parse(args []string) {
 	cmd := &Command{
 		Name:     c.Name,
 		Desc:     c.Desc,
-		Run:      nil,
+		Run:      c.Run,
 		ManPage:  c.ManPage,
 		Commands: c.Commands,
 		Flags:    c.Flags,
