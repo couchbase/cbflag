@@ -112,20 +112,31 @@ func (c *Command) parseFlags(ctx *Context, args []string) {
 			return
 		}
 
-		flag := c.findFlagByName(args[i])
+		flag, isDeprecated := c.findFlagByName(args[i])
 		if flag == nil {
 			fmt.Fprintf(ctx.cli.Writer, "Unknown flag: %s\n\n", args[i])
 			fmt.Fprint(ctx.cli.Writer, c.usageTitle(ctx)+c.Usage())
 			return
 		}
 
+		if isDeprecated {
+			fmt.Fprintf(ctx.cli.Writer, "Warning: %s is deprecated, use -%s/--%s\n", args[i],
+				flag.short, flag.long)
+		}
+
 		if flag.found() {
-			fmt.Fprintf(ctx.cli.Writer, "Argument for -%s/--%s already specified\n\n", flag.short, flag.long)
+			extra := ""
+			if flag.deprecatedFlagSpecified() {
+				extra = fmt.Sprintf(" by a deprecated flag (%s)", flag.deprecatedFlagsString())
+			}
+
+			fmt.Fprintf(ctx.cli.Writer, "Argument for -%s/--%s already specified%s\n\n",
+				flag.short, flag.long, extra)
 			fmt.Fprint(ctx.cli.Writer, c.usageTitle(ctx)+c.Usage())
 			return
 		}
 
-		flag.markFound(args[i])
+		flag.markFound(args[i], isDeprecated)
 
 		if !flag.isFlag {
 			opt := args[i]
@@ -164,7 +175,7 @@ func (c *Command) parseFlags(ctx *Context, args []string) {
 
 	// Check to see if the help flag was specified
 	if c.help {
-		flag := c.findFlagByName("-h")
+		flag, _ := c.findFlagByName("-h")
 		if flag.foundLong && c.ManPage != "" {
 			c.showManual(ctx)
 		} else {
@@ -191,7 +202,7 @@ func (c *Command) parseFlags(ctx *Context, args []string) {
 	c.Run()
 }
 
-func (c *Command) findFlagByName(f string) *Flag {
+func (c *Command) findFlagByName(f string) (*Flag, bool) {
 	if strings.HasPrefix(f, "--") {
 		f = f[2:]
 	} else if strings.HasPrefix(f, "-") {
@@ -200,11 +211,17 @@ func (c *Command) findFlagByName(f string) *Flag {
 
 	for _, flag := range c.Flags {
 		if flag.short == f || flag.long == f {
-			return flag
+			return flag, false
+		}
+
+		for _, dep := range flag.deprecated {
+			if dep == f {
+				return flag, true
+			}
 		}
 	}
 
-	return nil
+	return nil, false
 }
 
 func (c *Command) showManual(ctx *Context) {

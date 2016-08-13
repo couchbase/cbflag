@@ -23,100 +23,105 @@ type OptionHandler func(string, string) (string, bool, error)
 type Flag struct {
 	short      string
 	long       string
+	deprecated []string
 	desc       string
 	value      Value
 	validator  ValidatorFn
 	optHandler OptionHandler
 	foundLong  bool
 	foundShort bool
+	foundDepr  bool
 	required   bool
 	hidden     bool
 	isFlag     bool
 }
 
-func BoolFlag(result *bool, def bool, short, long, usage string, hidden bool) *Flag {
-	return varFlag(newBoolValue(def, result), short, long, usage, nil, DefaultOptionHandler,
-		false, hidden, true)
+func BoolFlag(result *bool, def bool, short, long, usage string, deprecated []string, hidden bool) *Flag {
+	return varFlag(newBoolValue(def, result), short, long, usage, deprecated, nil,
+		DefaultOptionHandler, false, hidden, true)
 }
 
-func Float64Flag(result *float64, def float64, short, long, usage string, validator ValidatorFn, required,
-	hidden bool) *Flag {
-	return varFlag(newFloat64Value(def, result), short, long, usage, validator, DefaultOptionHandler,
-		required, hidden, false)
+func Float64Flag(result *float64, def float64, short, long, usage string, deprecated []string,
+	validator ValidatorFn, required, hidden bool) *Flag {
+	return varFlag(newFloat64Value(def, result), short, long, usage, deprecated, validator,
+		DefaultOptionHandler, required, hidden, false)
 }
 
-func IntFlag(result *int, def int, short, long, usage string, validator ValidatorFn, required, hidden bool) *Flag {
-	return varFlag(newIntValue(def, result), short, long, usage, validator, DefaultOptionHandler,
-		required, hidden, false)
-}
-
-func Int64Flag(result *int64, def int64, short, long, usage string, validator ValidatorFn, required,
-	hidden bool) *Flag {
-	return varFlag(newInt64Value(def, result), short, long, usage, validator, DefaultOptionHandler,
-		required, hidden, false)
-}
-
-func StringFlag(result *string, def, short, long, usage string, validator ValidatorFn, required,
-	hidden bool) *Flag {
-	return varFlag(newStringValue(def, result), short, long, usage, validator, DefaultOptionHandler,
-		required, hidden, false)
-}
-
-func UintFlag(result *uint, def uint, short, long, usage string, validator ValidatorFn, required,
-	hidden bool) *Flag {
-	return varFlag(newUintValue(def, result), short, long, usage, validator, DefaultOptionHandler,
-		required, hidden, false)
-}
-
-func Uint64Flag(result *uint64, def uint64, short, long, usage string, validator ValidatorFn,
+func IntFlag(result *int, def int, short, long, usage string, deprecated []string, validator ValidatorFn,
 	required, hidden bool) *Flag {
-	return varFlag(newUint64Value(def, result), short, long, usage, validator, DefaultOptionHandler,
-		required, hidden, false)
+	return varFlag(newIntValue(def, result), short, long, usage, deprecated, validator,
+		DefaultOptionHandler, required, hidden, false)
 }
 
-func HostFlag(result *string, def string, required, hidden bool) *Flag {
+func Int64Flag(result *int64, def int64, short, long, usage string, deprecated []string,
+	validator ValidatorFn, required, hidden bool) *Flag {
+	return varFlag(newInt64Value(def, result), short, long, usage, deprecated, validator,
+		DefaultOptionHandler, required, hidden, false)
+}
+
+func StringFlag(result *string, def, short, long, usage string, deprecated []string,
+	validator ValidatorFn, required, hidden bool) *Flag {
+	return varFlag(newStringValue(def, result), short, long, usage, deprecated, validator,
+		DefaultOptionHandler, required, hidden, false)
+}
+
+func UintFlag(result *uint, def uint, short, long, usage string, deprecated []string,
+	validator ValidatorFn, required, hidden bool) *Flag {
+	return varFlag(newUintValue(def, result), short, long, usage, deprecated, validator,
+		DefaultOptionHandler, required, hidden, false)
+}
+
+func Uint64Flag(result *uint64, def uint64, short, long, usage string, deprecated []string,
+	validator ValidatorFn, required, hidden bool) *Flag {
+	return varFlag(newUint64Value(def, result), short, long, usage, deprecated, validator,
+		DefaultOptionHandler, required, hidden, false)
+}
+
+func HostFlag(result *string, def string, deprecated []string, required, hidden bool) *Flag {
 	return varFlag(newStringValue(def, result), "c", "cluster", "The hostname of the Couchbase cluster",
-		HostValidator, DefaultOptionHandler, required, hidden, false)
+		deprecated, HostValidator, DefaultOptionHandler, required, hidden, false)
 }
 
-func UsernameFlag(result *string, def string, required, hidden bool) *Flag {
+func UsernameFlag(result *string, def string, deprecated []string, required, hidden bool) *Flag {
 	return varFlag(newStringValue(def, result), "u", "username", "The hostname of the Couchbase cluster",
-		nil, DefaultOptionHandler, required, hidden, false)
+		deprecated, nil, DefaultOptionHandler, required, hidden, false)
 }
 
-func PasswordFlag(result *string, def string, required, hidden bool) *Flag {
+func PasswordFlag(result *string, def string, deprecated []string, required, hidden bool) *Flag {
 	return varFlag(newStringValue(def, result), "p", "password", "The password of the Couchbase cluster",
-		nil, PasswordOptionHandler, required, hidden, false)
+		deprecated, nil, PasswordOptionHandler, required, hidden, false)
 }
 
-func CACertFlag(result *string, def string, required, hidden bool) *Flag {
+func CACertFlag(result *string, def string, deprecated []string, required, hidden bool) *Flag {
 	return varFlag(newStringValue(def, result), "", "cacert",
-		"Verifies the cluster identity with this certificate", nil, DefaultOptionHandler,
+		"Verifies the cluster identity with this certificate", deprecated, nil, DefaultOptionHandler,
 		required, hidden, false)
 }
 
-func NoSSLVerifyFlag(result *bool, required, hidden bool) *Flag {
+func NoSSLVerifyFlag(result *bool, deprecated []string, required, hidden bool) *Flag {
 	return varFlag(newBoolValue(false, result), "", "no-ssl-verify",
-		"Skips SSL verification of certificates against CA", nil, DefaultOptionHandler,
+		"Skips SSL verification of certificates against CA", deprecated, nil, DefaultOptionHandler,
 		required, hidden, true)
 }
 
 func helpFlag(result *bool) *Flag {
-	return varFlag(newBoolValue(false, result), "h", "help", "Prints the help message", nil,
-		DefaultOptionHandler, false, false, true)
+	return varFlag(newBoolValue(false, result), "h", "help", "Prints the help message",
+		make([]string, 0), nil, DefaultOptionHandler, false, false, true)
 }
 
-func varFlag(value Value, short, long, usage string, validator ValidatorFn, optHandler OptionHandler,
-	required, hidden, isFlag bool) *Flag {
+func varFlag(value Value, short, long, usage string, deprecated []string, validator ValidatorFn,
+	optHandler OptionHandler, required, hidden, isFlag bool) *Flag {
 	return &Flag{
 		short:      short,
 		long:       long,
+		deprecated: deprecated,
 		desc:       usage,
 		value:      value,
 		validator:  validator,
 		optHandler: optHandler,
 		foundLong:  false,
 		foundShort: false,
+		foundDepr:  false,
 		required:   required,
 		hidden:     hidden,
 		isFlag:     isFlag,
@@ -124,11 +129,17 @@ func varFlag(value Value, short, long, usage string, validator ValidatorFn, optH
 }
 
 func (f *Flag) found() bool {
-	return f.foundLong || f.foundShort
+	return f.foundLong || f.foundShort || f.foundDepr
 }
 
-func (f *Flag) markFound(value string) {
-	if strings.HasPrefix(value, "--") {
+func (f *Flag) deprecatedFlagSpecified() bool {
+	return f.foundDepr
+}
+
+func (f *Flag) markFound(value string, deprecated bool) {
+	if deprecated {
+		f.foundDepr = true
+	} else if strings.HasPrefix(value, "--") {
 		f.foundLong = true
 	} else if strings.HasPrefix(value, "-") {
 		f.foundShort = true
@@ -179,6 +190,23 @@ func (f *Flag) flagsHelpString() string {
 	} else {
 		return ""
 	}
+}
+
+func (f *Flag) deprecatedFlagsString() string {
+	rv := ""
+	for _, depr := range f.deprecated {
+		if len(rv) > 0 {
+			rv += ","
+		}
+
+		if len(depr) == 1 {
+			rv += "-" + depr
+		} else {
+			rv += "--" + depr
+		}
+	}
+
+	return rv
 }
 
 func (f *Flag) splitDescription() []string {
