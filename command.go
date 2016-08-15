@@ -105,6 +105,15 @@ func (c *Command) parseFlags(ctx *Context, args []string) {
 		return
 	}
 
+	// Process environment variables first
+	for i := 0; i < len(c.Flags); i++ {
+		value := os.Getenv(c.Flags[i].env)
+		if value != "" {
+			c.Flags[i].value.Set(value)
+			c.Flags[i].markFound(value, true, false)
+		}
+	}
+
 	for i := 0; i < len(args); i++ {
 		if !(strings.HasPrefix(args[i], "-") || strings.HasPrefix(args[i], "--")) {
 			fmt.Fprintf(ctx.cli.Writer, "Expected flag: %s\n\n", args[i])
@@ -136,7 +145,7 @@ func (c *Command) parseFlags(ctx *Context, args []string) {
 			return
 		}
 
-		flag.markFound(args[i], isDeprecated)
+		flag.markFound(args[i], false, isDeprecated)
 
 		if !flag.isFlag {
 			opt := args[i]
