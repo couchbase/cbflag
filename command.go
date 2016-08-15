@@ -212,7 +212,7 @@ func (c *Command) showManual(ctx *Context) {
 	mcmd.Stdout = os.Stdout
 
 	if err := man.ShowManual(ctx.cli.ManPath, c.ManPage); err != nil {
-		fmt.Fprint(ctx.cli.Writer, err.Error() + "\n")
+		fmt.Fprint(ctx.cli.Writer, err.Error()+"\n")
 		return
 	}
 }
