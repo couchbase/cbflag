@@ -49,11 +49,12 @@ func HostValidator(value Value) error {
 	if parsed.Scheme == "" || parsed.Scheme == "http" || parsed.Scheme == "https" {
 		_, port, _ := net.SplitHostPort(parsed.Host)
 		if port == "" {
-			msg := "no"
-			if parsed.Scheme == "" {
-				msg = "http"
+			if parsed.Scheme == "" || parsed.Scheme == "http" {
+				port = "8091"
+			} else {
+				port = "18091"
 			}
-			return HostNameError{fmt.Sprintf("Host specified with %s scheme requires a port", msg)}
+			parsed.Host = fmt.Sprintf("%s:%s", parsed.Host, port)
 		}
 
 		p, err := strconv.ParseUint(port, 10, 64)
