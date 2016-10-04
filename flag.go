@@ -61,6 +61,12 @@ func Int64Flag(result *int64, def int64, short, long, env, usage string, depreca
 		DefaultOptionHandler, required, hidden, false)
 }
 
+func RuneFlag(result *rune, def rune, short, long, env, usage string, deprecated []string,
+	validator ValidatorFn, required, hidden bool) *Flag {
+	return varFlag(newRuneValue(def, result), short, long, env, usage, deprecated, validator,
+		DefaultOptionHandler, required, hidden, false)
+}
+
 func StringFlag(result *string, def, short, long, env, usage string, deprecated []string,
 	validator ValidatorFn, required, hidden bool) *Flag {
 	return varFlag(newStringValue(def, result), short, long, env, usage, deprecated, validator,

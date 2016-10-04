@@ -3,6 +3,7 @@ package cbflag
 import ()
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 )
@@ -105,6 +106,27 @@ func (i *uint64Value) Set(s string) error {
 func (i *uint64Value) Get() interface{} { return uint64(*i) }
 
 func (i *uint64Value) String() string { return fmt.Sprintf("%v", *i) }
+
+// -- rune Value
+type runeValue rune
+
+func newRuneValue(val rune, p *rune) *runeValue {
+	*p = val
+	return (*runeValue)(p)
+}
+
+func (s *runeValue) Set(val string) error {
+	if len(val) > 1 {
+		return errors.New("Value must be a single character")
+	}
+
+	*s = runeValue(val[0])
+	return nil
+}
+
+func (s *runeValue) Get() interface{} { return rune(*s) }
+
+func (s *runeValue) String() string { return fmt.Sprintf("%s", *s) }
 
 // -- string Value
 type stringValue string
