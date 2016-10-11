@@ -15,6 +15,7 @@ type Command struct {
 	Desc        string
 	ManPage     string
 	Run         func()
+	IsManualCmd bool
 	help        bool
 	initialized bool
 	Commands    []*Command
@@ -23,12 +24,13 @@ type Command struct {
 
 func NewCommand(name, usage, manPage string, cb func()) *Command {
 	rv := &Command{
-		Name:     name,
-		Desc:     usage,
-		ManPage:  manPage,
-		Run:      cb,
-		Commands: make([]*Command, 0),
-		Flags:    make([]*Flag, 0),
+		Name:        name,
+		Desc:        usage,
+		ManPage:     manPage,
+		Run:         cb,
+		IsManualCmd: false,
+		Commands:    make([]*Command, 0),
+		Flags:       make([]*Flag, 0),
 	}
 
 	return rv
@@ -69,6 +71,11 @@ func (c *Command) initialize() {
 
 func (c *Command) parse(ctx *Context, args []string) {
 	c.initialize()
+
+	if c.IsManualCmd {
+		c.showManual(ctx)
+		return
+	}
 
 	ctx.prevCmds = append(ctx.prevCmds, c.Name)
 	if len(args) == 0 {
