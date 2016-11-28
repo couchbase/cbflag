@@ -93,7 +93,7 @@ func HostFlag(result *string, def string, deprecated []string, required, hidden 
 
 func UsernameFlag(result *string, def string, deprecated []string, required, hidden bool) *Flag {
 	return varFlag(newStringValue(def, result), "u", "username", "CB_USERNAME",
-		"The hostname of the Couchbase cluster", deprecated, nil, DefaultOptionHandler, required,
+		"The username of the Couchbase cluster", deprecated, nil, DefaultOptionHandler, required,
 		hidden, false)
 }
 
