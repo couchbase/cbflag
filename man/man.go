@@ -7,6 +7,7 @@ package man
 
 import (
 	"fmt"
+	"os/exec"
 )
 
 type ManPathError struct {
@@ -24,6 +25,9 @@ type ManExecutionError struct {
 }
 
 func (e ManExecutionError) Error() string {
-	return fmt.Sprintf("Error executing %s command on %s, `%s`", e.exe,
-		e.path, e.err.Error())
+	errStr := e.err.Error()
+	if execErr, ok := e.err.(*exec.Error); ok {
+		errStr = execErr.Err.Error()
+	}
+	return fmt.Sprintf("Unable to open man page using `%s`, %s", e.exe, errStr)
 }
