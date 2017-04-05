@@ -22,6 +22,22 @@ func HostValidator(value Value) error {
 	// http://<addr>:<port>
 	// couchbase://<addr>
 
+	// Try first to just split the hostname and port. We need to do this because
+	// we want to support the <addr>:<port> scheme, but this is technically not
+	// a valid URI so we need to do some extra checks to see if it's valid.
+	host, port, err := net.SplitHostPort(value.String())
+	if err == nil {
+		if port == "" {
+			value.Set("http://" + host + ":8091")
+			return nil
+		}
+
+		if _, err := strconv.Atoi(port); err == nil {
+			value.Set("http://" + value.String())
+			return nil
+		}
+	}
+
 	parsed, err := url.Parse(value.String())
 	if err == nil && parsed.Scheme == "" {
 		parsed, err = url.Parse("http://" + value.String())
