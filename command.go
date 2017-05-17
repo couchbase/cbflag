@@ -15,6 +15,7 @@ type Command struct {
 	Desc        string
 	ManPage     string
 	Run         func()
+	Hidden      bool
 	IsManualCmd bool
 	help        bool
 	initialized bool
@@ -28,6 +29,7 @@ func NewCommand(name, usage, manPage string, cb func()) *Command {
 		Desc:        usage,
 		ManPage:     manPage,
 		Run:         cb,
+		Hidden:      false,
 		IsManualCmd: false,
 		Commands:    make([]*Command, 0),
 		Flags:       make([]*Flag, 0),
@@ -276,8 +278,10 @@ func (c *Command) Usage() string {
 		}
 
 		for _, cmd := range c.Commands {
-			spaces := strings.Repeat(" ", maxLen-len(cmd.Name))
-			s += fmt.Sprintf("  %s%s   %s\n", cmd.Name, spaces, cmd.Desc)
+			if !cmd.Hidden {
+				spaces := strings.Repeat(" ", maxLen-len(cmd.Name))
+				s += fmt.Sprintf("  %s%s   %s\n", cmd.Name, spaces, cmd.Desc)
+			}
 		}
 		s += "\n"
 	}
