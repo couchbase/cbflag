@@ -145,6 +145,10 @@ func (f *Flag) found() bool {
 	return f.foundLong || f.foundShort || f.foundEnv || f.foundDepr
 }
 
+func (f *Flag) foundNonEnv() bool {
+	return f.foundLong || f.foundShort || f.foundDepr
+}
+
 func (f *Flag) deprecatedFlagSpecified() bool {
 	return f.foundDepr
 }

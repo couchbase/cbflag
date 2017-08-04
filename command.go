@@ -142,7 +142,7 @@ func (c *Command) parseFlags(ctx *Context, args []string) {
 				flag.short, flag.long)
 		}
 
-		if flag.found() {
+		if flag.foundNonEnv() {
 			extra := ""
 			if flag.deprecatedFlagSpecified() {
 				extra = fmt.Sprintf(" by a deprecated flag (%s)", flag.deprecatedFlagsString())
