@@ -116,11 +116,24 @@ func newRuneValue(val rune, p *rune) *runeValue {
 }
 
 func (s *runeValue) Set(val string) error {
-	if len(val) > 1 {
-		return errors.New("Value must be a single character")
+	if len(val) == 0 {
+		return errors.New("No value specified")
+	} else if len(val) == 1 {
+		*s = runeValue(val[0])
+	} else if len(val) == 2 {
+		if val[0] == '\\' && val[1] == 'n' {
+			*s = runeValue('\n')
+		} else if val[0] == '\\' && val[1] == 'r' {
+			*s = runeValue('\r')
+		} else if val[0] == '\\' && val[1] == 't' {
+			*s = runeValue('\t')
+		} else {
+			return errors.New("Only \\n, \\r, and \\t are accepted escaped characters")
+		}
+	} else {
+		return errors.New("Must contain a single character or escaped character")
 	}
 
-	*s = runeValue(val[0])
 	return nil
 }
 
