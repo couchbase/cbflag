@@ -5,7 +5,9 @@ import ()
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strconv"
+	"strings"
 )
 
 // -- bool Value
@@ -175,6 +177,36 @@ func (f *float64Value) Set(s string) error {
 func (f *float64Value) Get() interface{} { return float64(*f) }
 
 func (f *float64Value) String() string { return fmt.Sprintf("%v", *f) }
+
+// -- int Array
+type intArray []int
+
+func newIntArray(val []int, p *[]int) *intArray {
+	*p = val
+	return (*intArray)(p)
+}
+
+func (i *intArray) Set(s string) error {
+	match := regexp.MustCompile(`(\d+,)*(\d+)`).FindString(s)
+	if len(match) != len(s) {
+		return errors.New("Not a list of integers")
+	}
+
+	elems := strings.Split(s, ",")
+	for _, elem := range elems {
+		val, err := strconv.Atoi(elem)
+		if err != nil {
+			return err
+		}
+		*i = append(*i, val)
+	}
+
+	return nil
+}
+
+func (i *intArray) Get() interface{} { return []int(*i) }
+
+func (i *intArray) String() string { return fmt.Sprintf("%v", *i) }
 
 // Value is the interface to the dynamic value stored in a flag.
 // (The default value is represented as a string.)

@@ -55,6 +55,12 @@ func IntFlag(result *int, def int, short, long, env, usage string, deprecated []
 		DefaultOptionHandler, required, hidden, false)
 }
 
+func IntArrayFlag(result *[]int, def []int, short, long, env, usage string, deprecated []string, validator ValidatorFn,
+	required, hidden bool) *Flag {
+	return varFlag(newIntArray(def, result), short, long, env, usage, deprecated, validator,
+		DefaultOptionHandler, required, hidden, false)
+}
+
 func Int64Flag(result *int64, def int64, short, long, env, usage string, deprecated []string,
 	validator ValidatorFn, required, hidden bool) *Flag {
 	return varFlag(newInt64Value(def, result), short, long, env, usage, deprecated, validator,
