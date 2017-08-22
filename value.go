@@ -160,6 +160,36 @@ func (s *stringValue) Get() interface{} { return string(*s) }
 
 func (s *stringValue) String() string { return fmt.Sprintf("%s", *s) }
 
+// -- stringMap Value
+type stringMapValue map[string]string
+
+func newStringMapValue(val map[string]string, p *map[string]string) *stringMapValue {
+	*p = val
+	return (*stringMapValue)(p)
+}
+
+func (s *stringMapValue) Set(val string) error {
+	mappingsList := strings.Split(val, ",")
+	for _, mapping := range mappingsList {
+		pair := strings.Split(mapping, "=")
+		if len(pair) != 2 {
+			return fmt.Errorf("Mapping `%s` should contain two parts", mapping)
+		}
+
+		if pair[0] == "" || pair[1] == "" {
+			return fmt.Errorf("Empty string in bucket mapping `%s`", mapping)
+		}
+
+		(map[string]string)(*s)[pair[0]] = pair[1]
+	}
+
+	return nil
+}
+
+func (s *stringMapValue) Get() interface{} { return map[string]string(*s) }
+
+func (s *stringMapValue) String() string { return fmt.Sprintf("%s", *s) }
+
 // -- float64 Value
 type float64Value float64
 

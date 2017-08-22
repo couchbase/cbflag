@@ -79,6 +79,12 @@ func StringFlag(result *string, def, short, long, env, usage string, deprecated 
 		DefaultOptionHandler, required, hidden, false)
 }
 
+func StringMapFlag(result *map[string]string, def map[string]string, short, long, env, usage string,
+	deprecated []string, validator ValidatorFn, required, hidden bool) *Flag {
+	return varFlag(newStringMapValue(def, result), short, long, env, usage, deprecated, validator,
+		DefaultOptionHandler, required, hidden, false)
+}
+
 func UintFlag(result *uint, def uint, short, long, env, usage string, deprecated []string,
 	validator ValidatorFn, required, hidden bool) *Flag {
 	return varFlag(newUintValue(def, result), short, long, env, usage, deprecated, validator,
