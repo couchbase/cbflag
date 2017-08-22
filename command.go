@@ -171,7 +171,7 @@ func (c *Command) parseFlags(ctx *Context, args []string) {
 			}
 
 			if err := flag.value.Set(value); err != nil {
-				fmt.Fprintf(ctx.cli.Writer, "Unable to process value for flag: %s\n\n", args[i])
+				fmt.Fprintf(ctx.cli.Writer, "Unable to process value for flag: %s. %s\n\n", args[i], err.Error())
 				fmt.Fprint(ctx.cli.Writer, c.usageTitle(ctx)+c.Usage())
 				return
 			}
