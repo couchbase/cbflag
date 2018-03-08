@@ -109,18 +109,20 @@ func (c *Command) parseCommands(ctx *Context, args []string) {
 }
 
 func (c *Command) parseFlags(ctx *Context, args []string) {
-	if len(args) == 0 {
-		fmt.Fprint(ctx.cli.Writer, c.usageTitle(ctx)+c.Usage())
-		return
-	}
-
 	// Process environment variables first
+	var hasEnvironmentVar bool
 	for i := 0; i < len(c.Flags); i++ {
 		value := os.Getenv(c.Flags[i].env)
 		if value != "" {
 			c.Flags[i].value.Set(value)
 			c.Flags[i].markFound(value, true, false)
+			hasEnvironmentVar = true
 		}
+	}
+	// If there are no Flags or Environment variables print the help
+	if len(args) == 0 && !hasEnvironmentVar {
+		fmt.Fprint(ctx.cli.Writer, c.usageTitle(ctx)+c.Usage())
+		return
 	}
 
 	for i := 0; i < len(args); i++ {
