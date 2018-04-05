@@ -81,7 +81,8 @@ func (c *Command) parse(ctx *Context, args []string) {
 
 	ctx.prevCmds = append(ctx.prevCmds, c.Name)
 	if len(args) == 0 {
-		fmt.Fprint(ctx.cli.Writer, c.usageTitle(ctx)+c.Usage())
+		// Check if there are flags set via environment variables
+		c.parseFlags(ctx, args)
 		return
 	}
 
