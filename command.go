@@ -118,6 +118,11 @@ func (c *Command) parseFlags(ctx *Context, args []string) {
 			c.Flags[i].value.Set(value)
 			c.Flags[i].markFound(value, true, false)
 			hasEnvironmentVar = true
+			if err := c.Flags[i].validate(); err != nil {
+				fmt.Fprintf(ctx.cli.Writer, "%s\n\n", err.Error())
+				fmt.Fprint(ctx.cli.Writer, c.usageTitle(ctx)+c.Usage())
+				return
+			}
 		}
 	}
 	// If there are no Flags or Environment variables print the help
