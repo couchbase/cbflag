@@ -214,7 +214,20 @@ func (c *Command) parseFlags(ctx *Context, args []string) {
 	allRequired := true
 	for _, flag := range c.Flags {
 		if flag.required && !flag.found() {
-			fmt.Fprintf(ctx.cli.Writer, "Flag required, but not specified: -%s/--%s\n", flag.short, flag.long)
+			fmt.Fprint(ctx.cli.Writer, "Flag required, but not specified: ")
+			if flag.short != "" {
+				fmt.Fprintf(ctx.cli.Writer, "-%s", flag.short)
+			}
+
+			if flag.short != "" && flag.long != "" {
+				fmt.Fprint(ctx.cli.Writer, "/")
+			}
+
+			if flag.long != "" {
+				fmt.Fprintf(ctx.cli.Writer, "--%s", flag.long)
+			}
+
+			fmt.Fprint(ctx.cli.Writer, "\n")
 			allRequired = false
 		}
 	}
