@@ -205,7 +205,7 @@ func (f *Flag) usageString() string {
 	}
 
 	for i := 1; i < len(lines); i++ {
-		s += fmt.Sprintf("%s%s\n", strings.Repeat(" ", TOTAL_LEN-USAGE_LEN), lines[i])
+		s += fmt.Sprintf("%s%s\n", strings.Repeat(" ", TOTAL_LEN-USAGE_LEN-1), lines[i])
 	}
 
 	return s
@@ -242,19 +242,19 @@ func (f *Flag) deprecatedFlagsString() string {
 
 func (f *Flag) splitDescription() []string {
 	desc := f.desc
+
+	line := ""
 	lines := make([]string, 0)
-	for len(desc) > 50 {
-		i := 50
-		for ; i >= 0; i-- {
-			if desc[i] == ' ' {
-				break
-			}
+	for _, char := range desc {
+		if len(line) >= 50 && char == ' ' {
+			lines = append(lines, line)
+			line = ""
 		}
-		lines = append(lines, desc[0:i])
-		desc = desc[i+1:]
+
+		line += string(char)
 	}
 
-	return append(lines, desc)
+	return append(lines, line)
 }
 
 func DefaultOptionHandler(opt, value string) (string, bool, error) {
