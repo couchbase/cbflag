@@ -103,6 +103,13 @@ func HostFlag(result *string, def string, deprecated []string, required, hidden 
 		required, hidden, false)
 }
 
+func HostFlagWithValidator(result *string, def string, deprecated []string, validator ValidatorFn,
+	required, hidden bool) *Flag {
+	return varFlag(newStringValue(def, result), "c", "cluster", "CB_CLUSTER",
+		"The hostname of the Couchbase cluster", deprecated, validator, DefaultOptionHandler,
+		required, hidden, false)
+}
+
 func UsernameFlag(result *string, def string, deprecated []string, required, hidden bool) *Flag {
 	return varFlag(newStringValue(def, result), "u", "username", "CB_USERNAME",
 		"The username of the Couchbase cluster", deprecated, nil, DefaultOptionHandler, required,
