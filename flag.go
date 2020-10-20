@@ -207,8 +207,14 @@ func (f *Flag) usageString() string {
 		s += fmt.Sprintf("%s%s\n", strings.Repeat(" ", TOTAL_LEN-USAGE_LEN), lines[0])
 	} else {
 		prePadding := strings.Repeat(" ", PREFIX_LEN)
-		postPadding := strings.Repeat(" ", FLAGS_LEN+POSTFIX_LEN-len(flagsStr))
-		s += fmt.Sprintf("%s%s%s%s\n", prePadding, flagsStr, postPadding, lines[0])
+		postPaddingLen := FLAGS_LEN + POSTFIX_LEN - len(flagsStr)
+		if postPaddingLen < 0 {
+			s += fmt.Sprintf("%s%s\n", prePadding, flagsStr)
+			s += fmt.Sprintf("%s%s\n", strings.Repeat(" ", PREFIX_LEN+FLAGS_LEN+POSTFIX_LEN), lines[0])
+		} else {
+			s += fmt.Sprintf("%s%s%s%s\n", prePadding, flagsStr, strings.Repeat(" ", postPaddingLen), lines[0])
+		}
+
 	}
 
 	for i := 1; i < len(lines); i++ {
