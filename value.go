@@ -10,8 +10,6 @@ licenses/APL2.txt.
 
 package cbflag
 
-import ()
-
 import (
 	"errors"
 	"fmt"
@@ -151,7 +149,7 @@ func (s *runeValue) Set(val string) error {
 
 func (s *runeValue) Get() interface{} { return rune(*s) }
 
-func (s *runeValue) String() string { return fmt.Sprintf("%s", *s) }
+func (s *runeValue) String() string { return string(*s) }
 
 // -- string Value
 type stringValue string

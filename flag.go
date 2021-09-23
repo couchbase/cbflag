@@ -127,9 +127,14 @@ func UsernameFlag(result *string, def string, deprecated []string, required, hid
 }
 
 func PasswordFlag(result *string, def string, deprecated []string, required, hidden bool) *Flag {
-	return varFlag(newStringValue(def, result), "p", "password", "CB_PASSWORD",
-		"The password of the Couchbase cluster", deprecated, nil, PasswordOptionHandler, required,
-		hidden, false)
+	return GenericPasswordFlag(result, def, "p", "password", "CB_PASSWORD", "The password of the Couchbase cluster",
+		deprecated, nil, required, hidden)
+}
+
+func GenericPasswordFlag(result *string, def, short, long, env, usage string, deprecated []string,
+	validator ValidatorFn, required, hidden bool) *Flag {
+	return varFlag(newStringValue(def, result), short, long, env, usage, deprecated, validator, PasswordOptionHandler,
+		required, hidden, false)
 }
 
 func CACertFlag(result *string, def string, deprecated []string, required, hidden bool) *Flag {
@@ -290,7 +295,7 @@ func DefaultOptionHandler(opt, value string) (string, bool, error) {
 
 func PasswordOptionHandler(opt, value string) (string, bool, error) {
 	if value == "" || strings.HasPrefix(value, "-") {
-		fmt.Print("Password: ")
+		fmt.Printf("Password for %s: ", opt)
 		password, err := pwd.GetPasswd()
 		return string(password), false, err
 	}

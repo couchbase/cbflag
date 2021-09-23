@@ -51,11 +51,15 @@ func getPasswd(masked bool) ([]byte, error) {
 	}
 
 	if terminal.IsTerminal(int(os.Stdin.Fd())) {
-		if oldState, err := terminal.MakeRaw(int(os.Stdin.Fd())); err != nil {
+		oldState, err := terminal.MakeRaw(int(os.Stdin.Fd()))
+		if err != nil {
 			return pass, err
-		} else {
-			defer terminal.Restore(int(os.Stdin.Fd()), oldState)
 		}
+
+		defer func() {
+			terminal.Restore(int(os.Stdin.Fd()), oldState)
+			fmt.Print("\n")
+		}()
 	}
 
 	// Track total bytes read, not just bytes in the password.  This ensures any
@@ -86,7 +90,6 @@ func getPasswd(masked bool) ([]byte, error) {
 		err = ErrMaxLengthExceeded
 	}
 
-	fmt.Println()
 	return pass, err
 }
 
