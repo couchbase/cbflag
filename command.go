@@ -33,6 +33,17 @@ type Command struct {
 	Flags       []*Flag
 }
 
+// ExitCode defines a type of exit codes that can be used by functions that use the cbflag library. The exit codes that
+// we are using follow the recommendation for restricting user-defined exit codes to the range 65-113 (in addition to 0,
+// for success) described, for example, in https://tldp.org/LDP/abs/html/exitcodes.html or on Linux distributions in
+// sysexits.h that can be found in the /usr/include directory.
+type ExitCode uint8
+
+const (
+	ExitCodeSuccess       ExitCode = 0  // Successful termination
+	ExitCodeCLIUsageError ExitCode = 64 // Command line usage error
+)
+
 func NewCommand(name, usage, manPage string, cb func()) *Command {
 	rv := &Command{
 		Name:        name,
@@ -81,45 +92,46 @@ func (c *Command) initialize() {
 	}
 }
 
-func (c *Command) parse(ctx *Context, args []string) {
+func (c *Command) parse(ctx *Context, args []string) ExitCode {
 	c.initialize()
 
 	if c.IsManualCmd {
-		c.showManual(ctx)
-		return
+		return c.showManual(ctx)
 	}
 
 	ctx.prevCmds = append(ctx.prevCmds, c.Name)
 	if len(args) == 0 {
 		// Check if there are flags set via environment variables
-		c.parseFlags(ctx, args)
-		return
+		return c.parseFlags(ctx, args)
 	}
 
 	if !strings.HasPrefix(args[0], "-") {
-		c.parseCommands(ctx, args)
+		return c.parseCommands(ctx, args)
 	} else {
-		c.parseFlags(ctx, args)
+		return c.parseFlags(ctx, args)
 	}
 }
 
-func (c *Command) parseCommands(ctx *Context, args []string) {
+func (c *Command) parseCommands(ctx *Context, args []string) ExitCode {
 	if len(args) == 0 {
 		fmt.Fprint(ctx.cli.Writer, c.usageTitle(ctx)+c.Usage())
-		return
+		// No commands are specified, print help and exit with 0 exit code
+		return ExitCodeSuccess
 	}
 
 	for _, cmd := range c.Commands {
 		if cmd.Name == args[0] {
-			cmd.parse(ctx, args[1:])
-			return
+			return cmd.parse(ctx, args[1:])
 		}
 	}
+
 	fmt.Fprintf(ctx.cli.Writer, "Invalid subcommand `%s`\n\n", args[0])
 	fmt.Fprint(ctx.cli.Writer, c.usageTitle(ctx)+c.Usage())
+	// Got an invalid subcommand, exit with a non-zero exit code
+	return ExitCodeCLIUsageError
 }
 
-func (c *Command) parseFlags(ctx *Context, args []string) {
+func (c *Command) parseFlags(ctx *Context, args []string) ExitCode {
 	// Process environment variables first
 	var hasEnvironmentVar bool
 	for i := 0; i < len(c.Flags); i++ {
@@ -131,28 +143,32 @@ func (c *Command) parseFlags(ctx *Context, args []string) {
 			if err := c.Flags[i].validate(); err != nil {
 				fmt.Fprintf(ctx.cli.Writer, "%s\n\n", err.Error())
 				fmt.Fprint(ctx.cli.Writer, c.usageTitle(ctx)+c.Usage())
-				return
+				// Failed to validate flag, exit with a non-zero exit code
+				return ExitCodeCLIUsageError
 			}
 		}
 	}
 	// If there are no Flags or Environment variables print the help
 	if len(args) == 0 && !hasEnvironmentVar {
 		fmt.Fprint(ctx.cli.Writer, c.usageTitle(ctx)+c.Usage())
-		return
+		// Print help and exit with 0 exit code
+		return ExitCodeSuccess
 	}
 
 	for i := 0; i < len(args); i++ {
 		if !(strings.HasPrefix(args[i], "-") || strings.HasPrefix(args[i], "--")) {
 			fmt.Fprintf(ctx.cli.Writer, "Expected flag: %s\n\n", args[i])
 			fmt.Fprint(ctx.cli.Writer, c.usageTitle(ctx)+c.Usage())
-			return
+			// Flag parser expects "-" or "--" prefix for a flag, exit with a non-zero exit code
+			return ExitCodeCLIUsageError
 		}
 
 		flag, isDeprecated := c.findFlagByName(args[i])
 		if flag == nil {
 			fmt.Fprintf(ctx.cli.Writer, "Unknown flag: %s\n\n", args[i])
 			fmt.Fprint(ctx.cli.Writer, c.usageTitle(ctx)+c.Usage())
-			return
+			// Unknown flag specified, exit with a non-zero exit code
+			return ExitCodeCLIUsageError
 		}
 
 		if isDeprecated {
@@ -169,7 +185,8 @@ func (c *Command) parseFlags(ctx *Context, args []string) {
 			fmt.Fprintf(ctx.cli.Writer, "Argument for -%s/--%s already specified%s\n\n",
 				flag.short, flag.long, extra)
 			fmt.Fprint(ctx.cli.Writer, c.usageTitle(ctx)+c.Usage())
-			return
+			// Argument for a flag is specified repeatedly, exit with a non-zero exit code
+			return ExitCodeCLIUsageError
 		}
 
 		flag.markFound(args[i], false, isDeprecated)
@@ -185,13 +202,15 @@ func (c *Command) parseFlags(ctx *Context, args []string) {
 			if err != nil {
 				fmt.Fprintf(ctx.cli.Writer, err.Error())
 				fmt.Fprint(ctx.cli.Writer, "\n\n"+c.usageTitle(ctx)+c.Usage())
-				return
+				// Error in optHandler, exit with a non-zero exit code
+				return ExitCodeCLIUsageError
 			}
 
 			if err := flag.value.Set(value); err != nil {
 				fmt.Fprintf(ctx.cli.Writer, "Unable to process value for flag: %s. %s\n\n", args[i], err.Error())
 				fmt.Fprint(ctx.cli.Writer, c.usageTitle(ctx)+c.Usage())
-				return
+				// Failed to process value for flag, exit with a non-zero exit code
+				return ExitCodeCLIUsageError
 			}
 
 			if hadOption {
@@ -204,7 +223,8 @@ func (c *Command) parseFlags(ctx *Context, args []string) {
 		if err := flag.validate(); err != nil {
 			fmt.Fprintf(ctx.cli.Writer, "%s\n\n", err.Error())
 			fmt.Fprint(ctx.cli.Writer, c.usageTitle(ctx)+c.Usage())
-			return
+			// Failed to validate the flag, exit with a non-zero exit code
+			return ExitCodeCLIUsageError
 		}
 
 	}
@@ -217,7 +237,8 @@ func (c *Command) parseFlags(ctx *Context, args []string) {
 		} else {
 			fmt.Fprint(ctx.cli.Writer, c.usageTitle(ctx)+c.Usage())
 		}
-		return
+
+		return ExitCodeSuccess
 	}
 
 	// Check that all required flags have been specified
@@ -245,10 +266,12 @@ func (c *Command) parseFlags(ctx *Context, args []string) {
 	if !allRequired {
 		fmt.Fprintf(ctx.cli.Writer, "\n")
 		fmt.Fprint(ctx.cli.Writer, c.usageTitle(ctx)+c.Usage())
-		return
+		// Not all required flags have been specified, exit with a non-zero exit code
+		return ExitCodeCLIUsageError
 	}
 
 	c.Run()
+	return ExitCodeSuccess
 }
 
 func (c *Command) findFlagByName(f string) (*Flag, bool) {
@@ -273,14 +296,16 @@ func (c *Command) findFlagByName(f string) (*Flag, bool) {
 	return nil, false
 }
 
-func (c *Command) showManual(ctx *Context) {
+func (c *Command) showManual(ctx *Context) ExitCode {
 	mcmd := exec.Command("man", filepath.Join(ctx.cli.ManPath, c.ManPage))
 	mcmd.Stdout = os.Stdout
 
 	if err := man.ShowManual(ctx.cli.ManPath, c.ManPage); err != nil {
 		fmt.Fprint(ctx.cli.Writer, err.Error()+"\n")
-		return
+		return ExitCodeCLIUsageError
 	}
+
+	return ExitCodeSuccess
 }
 
 func (c *Command) usageTitle(ctx *Context) string {

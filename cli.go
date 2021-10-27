@@ -66,7 +66,11 @@ func (c *CLI) Parse(args []string) {
 		cli:      c,
 		prevCmds: make([]string, 0),
 	}
-	cmd.parse(context, args[1:])
+
+	// Parse context and arguments, exit if parsing returns a non-zero exit code
+	if exitCode := cmd.parse(context, args[1:]); exitCode != 0 {
+		os.Exit(int(exitCode))
+	}
 }
 
 func (c *CLI) Usage() string {
