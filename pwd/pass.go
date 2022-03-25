@@ -16,7 +16,7 @@ import (
 	"io"
 	"os"
 
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 )
 
 var defaultGetCh = func() (byte, error) {
@@ -50,14 +50,14 @@ func getPasswd(masked bool) ([]byte, error) {
 		mask = []byte("*")
 	}
 
-	if terminal.IsTerminal(int(os.Stdin.Fd())) {
-		oldState, err := terminal.MakeRaw(int(os.Stdin.Fd()))
+	if term.IsTerminal(int(os.Stdin.Fd())) {
+		oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
 		if err != nil {
 			return pass, err
 		}
 
 		defer func() {
-			terminal.Restore(int(os.Stdin.Fd()), oldState)
+			term.Restore(int(os.Stdin.Fd()), oldState) //nolint:errcheck
 			fmt.Print("\n")
 		}()
 	}

@@ -36,7 +36,5 @@ func ShowManual(manpath, page string) error {
 		return ManExecutionError{path, "man", err}
 	}
 
-	mcmd.Wait()
-
-	return nil
+	return mcmd.Wait()
 }

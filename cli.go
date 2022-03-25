@@ -27,7 +27,6 @@ type CLI struct {
 	Run      func()
 	Commands []*Command
 	Flags    []*Flag
-	manpath  string
 	Writer   *os.File
 }
 

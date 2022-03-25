@@ -58,7 +58,8 @@ func TestGetPasswd(t *testing.T) {
 	origStdOut := os.Stdout
 	for _, masked := range []bool{true, false} {
 		for _, d := range ds {
-			pipeBytesToStdin(d.input)
+			_, err := pipeBytesToStdin(d.input)
+			require.NoError(t, err)
 
 			r, w, err := os.Pipe()
 			require.NoError(t, err)
@@ -214,8 +215,10 @@ func TestMaxPasswordLength(t *testing.T) {
 	}
 
 	for _, d := range ds {
-		pipeBytesToStdin(d.input)
-		_, err := GetPasswd()
+		_, err := pipeBytesToStdin(d.input)
+		require.NoError(t, err)
+
+		_, err = GetPasswd()
 		if err != d.expectedErr {
 			t.Errorf("Expected error to be %v; isntead got %v from %v", d.expectedErr, err, d.inputDesc)
 		}

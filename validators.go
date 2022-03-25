@@ -38,12 +38,12 @@ func HostValidator(value Value) error {
 	host, port, err := net.SplitHostPort(value.String())
 	if err == nil {
 		if port == "" {
-			value.Set("http://" + host + ":8091")
+			value.Set("http://" + host + ":8091") //nolint:errcheck
 			return nil
 		}
 
 		if _, err := strconv.Atoi(port); err == nil {
-			value.Set("http://" + value.String())
+			value.Set("http://" + value.String()) //nolint:errcheck
 			return nil
 		}
 	}
@@ -121,6 +121,6 @@ func HostValidator(value Value) error {
 		return HostNameError{fmt.Sprintf("Invalid hostname, %s is not an accepted scheme", parsed.Scheme)}
 	}
 
-	value.Set(parsed.String())
+	value.Set(parsed.String()) //nolint:errcheck
 	return nil
 }

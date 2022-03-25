@@ -38,13 +38,6 @@ func (b *boolValue) String() string { return fmt.Sprintf("%v", *b) }
 
 func (b *boolValue) IsBoolFlag() bool { return true }
 
-// optional interface to indicate boolean flags that can be
-// supplied without "=value" text
-type boolFlag interface {
-	Value
-	IsBoolFlag() bool
-}
-
 // -- int Value
 type intValue int
 
@@ -166,7 +159,7 @@ func (s *stringValue) Set(val string) error {
 
 func (s *stringValue) Get() interface{} { return string(*s) }
 
-func (s *stringValue) String() string { return fmt.Sprintf("%s", *s) }
+func (s *stringValue) String() string { return string(*s) }
 
 // -- stringMap Value
 type stringMapValue map[string]string

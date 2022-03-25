@@ -137,7 +137,7 @@ func (c *Command) parseFlags(ctx *Context, args []string) ExitCode {
 	for i := 0; i < len(c.Flags); i++ {
 		value := os.Getenv(c.Flags[i].env)
 		if value != "" {
-			c.Flags[i].value.Set(value)
+			c.Flags[i].value.Set(value) //nolint:errcheck
 			c.Flags[i].markFound(value, true, false)
 			hasEnvironmentVar = true
 			if err := c.Flags[i].validate(); err != nil {
@@ -200,7 +200,7 @@ func (c *Command) parseFlags(ctx *Context, args []string) ExitCode {
 
 			value, hadOption, err := flag.optHandler(opt, value)
 			if err != nil {
-				fmt.Fprintf(ctx.cli.Writer, err.Error())
+				fmt.Fprint(ctx.cli.Writer, err.Error())
 				fmt.Fprint(ctx.cli.Writer, "\n\n"+c.usageTitle(ctx)+c.Usage())
 				// Error in optHandler, exit with a non-zero exit code
 				return ExitCodeCLIUsageError
@@ -217,7 +217,8 @@ func (c *Command) parseFlags(ctx *Context, args []string) ExitCode {
 				i++
 			}
 		} else {
-			flag.value.Set("true")
+			// We know we have a bool flag here and "true" will parse so no need to check the error
+			flag.value.Set("true") //nolint:errcheck
 		}
 
 		if err := flag.validate(); err != nil {
@@ -277,8 +278,8 @@ func (c *Command) parseFlags(ctx *Context, args []string) ExitCode {
 func (c *Command) findFlagByName(f string) (*Flag, bool) {
 	if strings.HasPrefix(f, "--") {
 		f = f[2:]
-	} else if strings.HasPrefix(f, "-") {
-		f = f[1:]
+	} else {
+		f = strings.TrimPrefix(f, "-")
 	}
 
 	for _, flag := range c.Flags {
