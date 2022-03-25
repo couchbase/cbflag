@@ -46,7 +46,22 @@ func TestExitCodeParseFlagsNoArgs(t *testing.T) {
 }
 
 // TestExitCodeParseFlagsInvalidEnvFlag tests that the parseFlags() function exits with CLIUsageError (64) exit code if
-// an invalid environment flag was specified.
+// an unparsable (eg a string for an int flag) environment flag was specified.
+func TestExitCodeParseFlagsUnparsableEnvFlag(t *testing.T) {
+	command := NewCommand("", "", "", func() {})
+	var result int
+	flag := IntFlag(&result, 0, "", "", "FOO", "", []string{},
+		func(Value) error { return assert.AnError }, true, true)
+	command.AddFlag(flag)
+	contextPtr := &Context{NewCLI("", ""), []string{}}
+	os.Setenv("FOO", "thisIsNotAnInt")
+	defer os.Unsetenv("FOO")
+	exitCode := command.parseFlags(contextPtr, []string{})
+	require.Equal(t, ExitCodeCLIUsageError, exitCode)
+}
+
+// TestExitCodeParseFlagsInvalidEnvFlag tests that the parseFlags() function exits with CLIUsageError (64) exit code if
+// an environment flag with a value that couldn't be validated was specified.
 func TestExitCodeParseFlagsInvalidEnvFlag(t *testing.T) {
 	command := NewCommand("", "", "", func() {})
 	result := ""

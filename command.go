@@ -137,10 +137,19 @@ func (c *Command) parseFlags(ctx *Context, args []string) ExitCode {
 	for i := 0; i < len(c.Flags); i++ {
 		value := os.Getenv(c.Flags[i].env)
 		if value != "" {
-			c.Flags[i].value.Set(value) //nolint:errcheck
+			err := c.Flags[i].value.Set(value)
+			if err != nil {
+				fmt.Fprintf(ctx.cli.Writer, "value of '%s' is not valid\n", c.Flags[i].env)
+				fmt.Fprint(ctx.cli.Writer, c.usageTitle(ctx)+c.Usage())
+				// Failed to parse flag, exit with a non-zero exit code
+				return ExitCodeCLIUsageError
+			}
+
 			c.Flags[i].markFound(value, true, false)
 			hasEnvironmentVar = true
-			if err := c.Flags[i].validate(); err != nil {
+			err = c.Flags[i].validate()
+
+			if err != nil {
 				fmt.Fprintf(ctx.cli.Writer, "%s\n\n", err.Error())
 				fmt.Fprint(ctx.cli.Writer, c.usageTitle(ctx)+c.Usage())
 				// Failed to validate flag, exit with a non-zero exit code
