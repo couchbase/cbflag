@@ -203,3 +203,41 @@ func TestExitCodeParseFlagsSuccess(t *testing.T) {
 	exitCode := command.parseFlags(contextPtr, []string{"-c", "address"})
 	require.Equal(t, ExitCodeSuccess, exitCode)
 }
+
+func TestParseLong(t *testing.T) {
+	tests := []struct {
+		name     string
+		args     []string
+		expected string
+		exitCode ExitCode
+	}{
+		{name: "Empty"},
+		{name: "AloneFull", args: []string{"--result", "boom"}, expected: "boom"},
+		{name: "AloneEquals", args: []string{"--result=boom"}, expected: "boom"},
+		{name: "AloneEqualsBlankFails", args: []string{"--result="}, exitCode: ExitCodeCLIUsageError},
+		{name: "OthersFull", args: []string{"-b", "bar", "-f", "foo", "--flag", "--result", "boom"}, expected: "boom"},
+		{name: "OthersEquals", args: []string{"-b", "bar", "--result=boom", "-f", "foo"}, expected: "boom"},
+		{name: "MoreThanOneEquals", args: []string{"--result=boom=foo"}, exitCode: ExitCodeCLIUsageError},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var (
+				ignored, result string
+				ignoredB bool
+			)
+
+
+			command := NewCommand("", "", "", func() {})
+			command.AddFlag(StringFlag(&ignored, "", "f", "foo", "", "", []string{}, nil, false, true))
+			command.AddFlag(StringFlag(&ignored, "", "b", "bar", "", "", []string{}, nil, false, true))
+			command.AddFlag(BoolFlag(&ignoredB, false, "flag", "", "", "", []string{}, false))
+			command.AddFlag(StringFlag(&result, "", "", "result", "", "", []string{}, nil, false, true))
+
+			ctx := &Context{NewCLI("", ""), []string{}}
+			exitCode := command.parseFlags(ctx, test.args)
+			require.Equal(t, test.exitCode, exitCode)
+			require.Equal(t, test.expected, result)
+		})
+	}
+}

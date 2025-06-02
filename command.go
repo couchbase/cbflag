@@ -165,23 +165,57 @@ func (c *Command) parseFlags(ctx *Context, args []string) ExitCode {
 	}
 
 	for i := 0; i < len(args); i++ {
-		if !(strings.HasPrefix(args[i], "-") || strings.HasPrefix(args[i], "--")) {
+		var (
+			flagName         string
+			flagValue        string
+			valueFromNextArg bool
+		)
+
+		switch {
+		case strings.HasPrefix(args[i], "--"):
+			if !strings.Contains(args[i], "=") {
+				flagName = args[i]
+				if i+1 < len(args) {
+					flagValue = args[i+1]
+					valueFromNextArg = true
+				}
+
+				break
+			}
+
+			split := strings.Split(args[i], "=")
+			if len(split) != 2 {
+				fmt.Fprintf(ctx.cli.Writer, "'=' appears too many times in %s\n\n", args[i])
+				return ExitCodeCLIUsageError
+			}
+
+			flagName = split[0]
+			flagValue = split[1]
+
+		case strings.HasPrefix(args[i], "-"):
+			flagName = args[i]
+			if i+1 < len(args) {
+				flagValue = args[i+1]
+				valueFromNextArg = true
+			}
+
+		default:
 			fmt.Fprintf(ctx.cli.Writer, "Expected flag: %s\n\n", args[i])
 			fmt.Fprint(ctx.cli.Writer, c.usageTitle(ctx)+c.Usage())
 			// Flag parser expects "-" or "--" prefix for a flag, exit with a non-zero exit code
 			return ExitCodeCLIUsageError
 		}
 
-		flag, isDeprecated := c.findFlagByName(args[i])
+		flag, isDeprecated := c.findFlagByName(flagName)
 		if flag == nil {
-			fmt.Fprintf(ctx.cli.Writer, "Unknown flag: %s\n\n", args[i])
+			fmt.Fprintf(ctx.cli.Writer, "Unknown flag: %s\n\n", flagName)
 			fmt.Fprint(ctx.cli.Writer, c.usageTitle(ctx)+c.Usage())
 			// Unknown flag specified, exit with a non-zero exit code
 			return ExitCodeCLIUsageError
 		}
 
 		if isDeprecated {
-			fmt.Fprintf(ctx.cli.Writer, "Warning: %s is deprecated, use -%s/--%s\n", args[i],
+			fmt.Fprintf(ctx.cli.Writer, "Warning: %s is deprecated, use -%s/--%s\n", flagName,
 				flag.short, flag.long)
 		}
 
@@ -198,16 +232,10 @@ func (c *Command) parseFlags(ctx *Context, args []string) ExitCode {
 			return ExitCodeCLIUsageError
 		}
 
-		flag.markFound(args[i], false, isDeprecated)
+		flag.markFound(flagName, false, isDeprecated)
 
 		if !flag.isFlag {
-			opt := args[i]
-			value := ""
-			if (i + 1) < len(args) {
-				value = args[i+1]
-			}
-
-			value, hadOption, err := flag.optHandler(opt, value)
+			value, _, err := flag.optHandler(flagName, flagValue)
 			if err != nil {
 				fmt.Fprint(ctx.cli.Writer, err.Error())
 				fmt.Fprint(ctx.cli.Writer, "\n\n"+c.usageTitle(ctx)+c.Usage())
@@ -216,13 +244,13 @@ func (c *Command) parseFlags(ctx *Context, args []string) ExitCode {
 			}
 
 			if err := flag.value.Set(value); err != nil {
-				fmt.Fprintf(ctx.cli.Writer, "Unable to process value for flag: %s. %s\n\n", args[i], err.Error())
+				fmt.Fprintf(ctx.cli.Writer, "Unable to process value for flag: %s. %s\n\n", flagName, err.Error())
 				fmt.Fprint(ctx.cli.Writer, c.usageTitle(ctx)+c.Usage())
 				// Failed to process value for flag, exit with a non-zero exit code
 				return ExitCodeCLIUsageError
 			}
 
-			if hadOption {
+			if valueFromNextArg {
 				i++
 			}
 		} else {
