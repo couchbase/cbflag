@@ -286,7 +286,7 @@ func (f *Flag) splitDescription() []string {
 }
 
 func DefaultOptionHandler(opt, value string) (string, bool, error) {
-	if value == "" || strings.HasPrefix(value, "-") {
+	if value == "" {
 		return value, false, fmt.Errorf("Expected argument for option: %s", opt)
 	}
 
@@ -294,7 +294,7 @@ func DefaultOptionHandler(opt, value string) (string, bool, error) {
 }
 
 func PasswordOptionHandler(opt, value string) (string, bool, error) {
-	if value == "" || strings.HasPrefix(value, "-") {
+	if value == "" {
 		fmt.Printf("Password for %s: ", opt)
 		password, err := pwd.GetPasswd()
 		return string(password), false, err

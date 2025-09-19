@@ -241,3 +241,16 @@ func TestParseLong(t *testing.T) {
 		})
 	}
 }
+
+func TestFlagOptionValueStartsWithDash(t *testing.T) {
+	var foo string
+
+	command := NewCommand("", "", "", func() {})
+	command.AddFlag(StringFlag(&foo, "", "f", "foo", "", "", []string{}, nil, false, true))
+
+	ctx := &Context{NewCLI("", ""), []string{}}
+
+	exitCode := command.parseFlags(ctx, []string{"--foo", "-this-is-not-a-flag"})
+	require.Equal(t, ExitCode(0), exitCode)
+	require.Equal(t, "-this-is-not-a-flag", foo)
+}
